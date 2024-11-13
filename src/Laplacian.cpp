@@ -16,24 +16,24 @@ void Laplacian::InitialCondition(std::vector<double> &U){
     int Np, Me, iBeg, iEnd, jBeg, jEnd;
     MPI_Comm_rank(MPI_COMM_WORLD, &Me);
     MPI_Comm_size(MPI_COMM_WORLD, &Np);
-    double r(_df->Get_r());
+    int r(_df->Get_r());
 
     charge(Me, (_df->Get_Ny()-1), Np, &iBeg, &iEnd);
 
     if (Me == 0){
-        U.resize((iEnd-iBeg+1 + r-1)*(_df->Get_Nx()-1),0.0);
+        U.resize((iEnd-iBeg+1 + r/2 + r%2)*(_df->Get_Nx()-1),0.0);
         jBeg = iBeg;
-        jEnd = iEnd + r-1;
+        jEnd = iEnd + r/2 + r%2;
     }
     else if (Me == Np-1){
-        U.resize((iEnd-iBeg+1 + r-1)*(_df->Get_Nx()-1),0.0);
-        jBeg = iBeg - r+1;
+        U.resize((iEnd-iBeg+1 + r/2)*(_df->Get_Nx()-1),0.0);
+        jBeg = iBeg - r/2;
         jEnd = iEnd;
     }
     else{
-        U.resize((iEnd-iBeg+1 + 2*(r-1))*(_df->Get_Nx()-1),0.0);
-        jBeg = iBeg - r+1;
-        jEnd = iEnd + r-1;
+        U.resize((iEnd-iBeg+1 + r)*(_df->Get_Nx()-1),0.0);
+        jBeg = iBeg - r/2;
+        jEnd = iEnd + r/2 + r%2;
     }
 
     for (int j = jBeg+1; j <= jEnd+1; ++j){
@@ -51,8 +51,8 @@ std::vector<double> Laplacian::MatVecProd(const std::vector<double> &U){
     int Nx(_df->Get_Nx()), Ny(_df->Get_Ny());
     double dx(_df->Get_dx()), dy(_df->Get_dy()), xmin(_df->Get_xmin()), ymin(_df->Get_ymin()); 
     double dt(_df->Get_dt()), D(_df->Get_D()), alpha(_df->Get_alpha()), beta(_df->Get_beta());
-    double a, b, c, d((2.0*D*dt*beta)/(alpha*dy)), r(_df->Get_r());
-    int i, j;
+    double a, b, c, d((2.0*D*dt*beta)/(alpha*dy));
+    int i, j,r(_df->Get_r());
     int Np, Me, iBeg, iEnd;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &Me);
@@ -78,7 +78,7 @@ std::vector<double> Laplacian::MatVecProd(const std::vector<double> &U){
             if (i > 0) X[k] += b * U[k - 1];
             if (i < Nx-2) X[k] += b * U[k + 1];
             if (j > 0) X[k] += c * U[k - Nx+1];
-            if (j < (iEnd-iBeg + 2*(r-1))) X[k] += c * U[k + Nx-1];
+            if (j < (iEnd-iBeg + 1 + r - 1)) X[k] += c * U[k + Nx-1];
         }
     }
     if ((Me == 0)){
@@ -99,7 +99,7 @@ std::vector<double> Laplacian::MatVecProd(const std::vector<double> &U){
             if (i > 0) X[k] += b * U[k - 1];
             if (i < Nx-2) X[k] += b * U[k + 1];
             if (j > 0) X[k] += c * U[k - Nx+1];
-            if (j < (iEnd-iBeg + r-1)) X[k] += c * U[k + Nx-1];
+            if (j < (iEnd-iBeg + r/2 + r%2)) X[k] += c * U[k + Nx-1];
         }
     }
     if (Me == Np-1){
@@ -120,7 +120,7 @@ std::vector<double> Laplacian::MatVecProd(const std::vector<double> &U){
             if (i > 0) X[k] += b * U[k - 1];
             if (i < Nx-2) X[k] += b * U[k + 1];
             if (j > 0) X[k] += c * U[k - Nx+1];
-            if (j < (iEnd-iBeg + r-1)) X[k] += c * U[k + Nx-1];
+            if (j < (iEnd-iBeg + r/2)) X[k] += c * U[k + Nx-1];
         }
     }
 
@@ -163,9 +163,15 @@ std::vector<double> Laplacian::RHS(const double t, const std::vector<double> &U)
         Mem1 = Me-1;
     }
 
-    MPI_Send(&U[N-3*(Nx-1)], 3*(Nx-1), MPI_DOUBLE, Mep1, Tag12, MPI_COMM_WORLD);
+    printf("N=%d",N);
+    printf("debut Mem1=%d",N-(r+1)*(Nx-1));
+    printf("taille=%d",3*(Nx-1));
+    printf("debut Mep1=%d",(r-2)*(Nx-1));
+
+
+    MPI_Send(&U[N-(r+1)*(Nx-1)], 3*(Nx-1), MPI_DOUBLE, Mep1, Tag12, MPI_COMM_WORLD);
     MPI_Recv(&U_Mem1[0], 3*(Nx-1), MPI_DOUBLE, Mem1, Tag12, MPI_COMM_WORLD, &status);
-    MPI_Send(&U[0], 3*(Nx-1), MPI_DOUBLE, Mem1, Tag11, MPI_COMM_WORLD);
+    MPI_Send(&U[(r-2)*(Nx-1)], 3*(Nx-1), MPI_DOUBLE, Mem1, Tag11, MPI_COMM_WORLD);
     MPI_Recv(&U_Mep1[0], 3*(Nx-1), MPI_DOUBLE, Mep1, Tag11, MPI_COMM_WORLD, &status);
 
     for(int j = jBeg+1; j <= jEnd+1; ++j){
@@ -180,11 +186,11 @@ std::vector<double> Laplacian::RHS(const double t, const std::vector<double> &U)
                 rhs[k] += _df->Get_D()*_fct->Dirichlet_Gamma_1(x_i + dx,y_j,t)/(dx*dx);
             } 
             if(j == jBeg+1){
-                rhs[k] += (_df->Get_D()/(dy*dy))*(U_Mem1[i-1 + (r-2)*(Nx-1)] - U_Mem1[i-1 + r*(Nx-1)] + (2*beta*dy/alpha)*U_Mem1[i-1 + (r-1)*(Nx-1)]);
+                rhs[k] += (_df->Get_D()/(dy*dy))*(U_Mem1[i-1] - U_Mem1[i-1 + 2*(Nx-1)] + (2*beta*dy/alpha)*U_Mem1[i-1 + Nx-1]);
                 if (Me == 0) rhs[k] += _df->Get_D()*_fct->Dirichlet_Gamma_0(x_i,y_j - dy,t)/(dy*dy);
             } 
             if(j == jEnd+1){
-                rhs[k] += (_df->Get_D()/(dy*dy))*(U_Mep1[i-1 + r*(Nx-1)] - U_Mep1[i-1 + (r-2)*(Nx-1)] + (2*beta*dy/alpha)*U_Mep1[i-1 + (r-1)*(Nx-1)]);
+                rhs[k] += (_df->Get_D()/(dy*dy))*(U_Mep1[i-1 + 2*(Nx-1)] - U_Mep1[i-1] + (2*beta*dy/alpha)*U_Mep1[i-1 + Nx-1]);
                 if (Me == Np-1) rhs[k] += _df->Get_D()*_fct->Dirichlet_Gamma_0(x_i,y_j + dy,t)/(dy*dy);
             } 
             ++k;
@@ -198,7 +204,7 @@ std::vector<double> Laplacian::ExactSol(const double t){
     int k(0), Np, Me, iBeg, iEnd, jBeg, jEnd;
     MPI_Comm_rank(MPI_COMM_WORLD, &Me);
     MPI_Comm_size(MPI_COMM_WORLD, &Np);
-    double r(_df->Get_r());
+    int r(_df->Get_r());
 
     charge(Me, (_df->Get_Ny()-1), Np, &iBeg, &iEnd);
 

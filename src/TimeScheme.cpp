@@ -188,12 +188,12 @@ void ImplicitScheme::Integrate(double &t, std::vector<double> &U){
     std::vector<double> U_old, U_diff, U_Me, U_Me_old;
     double max(1e12), max_loc(1e12);
     int Nx(_df->Get_Nx());
-    int Np, Me, k(0), kmax(10000);
+    int Np, Me, k(0), kmax(1000);
     MPI_Comm_rank(MPI_COMM_WORLD, &Me);
     MPI_Comm_size(MPI_COMM_WORLD, &Np);
-    while ((k < kmax) && (max > 1e-12)){
-        U_old = U;
-        U_Me_old = TruncVector(U_old,_df->Get_Nx());
+    while ((k < kmax)){
+        //U_old = U;
+        //U_Me_old = TruncVector(U_old,_df->Get_Nx());
         if (_df->Get_Solver() == "Jacobi"){
             U = Jacobi(U, _lap->RHS(t,U));
         } 
@@ -207,17 +207,18 @@ void ImplicitScheme::Integrate(double &t, std::vector<double> &U){
             printf("Pas de solveur\n");
             std::exit(0);
         }
-        U_Me = TruncVector(U,_df->Get_Nx());
-        U_diff = AbsVector(SubVector(U_Me,U_Me_old));
-        max_loc = *std::max_element(U_diff.begin(), U_diff.end());
-        MPI_Allreduce(&max_loc, &max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+        // U_Me = TruncVector(U,_df->Get_Nx());
+        // U_diff = AbsVector(SubVector(U_Me,U_Me_old));
+        // max_loc = *std::max_element(U_diff.begin(), U_diff.end());
+        // MPI_Allreduce(&max_loc, &max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
         ++k;
+        printf("k=%d",k);
     }
 
-    if (k >= kmax){
-        printf("Pas de convergence (Schwarz)\n");
-        std::exit(0);
-    }
+    // if (k >= kmax){
+    //     printf("Pas de convergence (Schwarz)\n");
+    //     std::exit(0);
+    // }
 }
 
 #define _TIME_SCHEME_CPP

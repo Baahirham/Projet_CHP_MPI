@@ -1,5 +1,5 @@
 # Compilateur utilisé
-CC=mpic++
+CC=/usr/lib64/openmpi/bin/mpic++
 
 # Options en mode optimisé - La variable DEBUG est définie comme fausse
 OPTIM_FLAG = -O3 -DNDEBUG -I -std=c++11
