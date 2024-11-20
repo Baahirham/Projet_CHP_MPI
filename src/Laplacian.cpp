@@ -36,6 +36,8 @@ void Laplacian::InitialCondition(std::vector<double> &U){
         jEnd = iEnd + r/2 + r%2;
     }
 
+    //printf("Me=%d, jBeg=%d, jEnd=%d\n",Me,jBeg,jEnd);
+
     for (int j = jBeg+1; j <= jEnd+1; ++j){
         for (int i = 1; i<_df->Get_Nx(); ++i){
             U[k] = _fct->Initial_condition(_df->Get_xmin() + i*_df->Get_dx(),_df->Get_ymin() + j*_df->Get_dy());
@@ -145,34 +147,40 @@ std::vector<double> Laplacian::RHS(const double t, const std::vector<double> &U)
 
     if (Me == 0){
         jBeg = iBeg;
-        jEnd = iEnd + r-1;
+        jEnd = iEnd + r/2 + r%2;
         Mep1 = Me+1;
         Mem1 = MPI_PROC_NULL;
     }
     if (Me == Np-1)
     {
-        jBeg = iBeg - r+1;
+        jBeg = iBeg - r/2;
         jEnd = iEnd;
         Mep1 = MPI_PROC_NULL;
         Mem1 = Me-1;
     }
     if ((Me != 0) && (Me != Np-1)){
-        jBeg = iBeg - r+1;
-        jEnd = iEnd + r-1;
+        jBeg = iBeg - r/2;
+        jEnd = iEnd + r/2 + r%2;
         Mep1 = Me+1;
         Mem1 = Me-1;
     }
 
-    printf("N=%d",N);
-    printf("debut Mem1=%d",N-(r+1)*(Nx-1));
-    printf("taille=%d",3*(Nx-1));
-    printf("debut Mep1=%d",(r-2)*(Nx-1));
+    // printf("Me=%d, ibeg=%d, iend=%d\n",Me,iBeg,iEnd);
+    // printf("Me=%d, jbeg=%d, jend=%d\n",Me,jBeg,jEnd);
 
+    // printf("N=%d\n",N);
+    // printf("debut Mem1=%d\n",N-(r+1)*(Nx-1));
+    // printf("taille=%d\n",3*(Nx-1));
+    // printf("debut Mep1=%d\n",(r-2)*(Nx-1));
 
     MPI_Send(&U[N-(r+1)*(Nx-1)], 3*(Nx-1), MPI_DOUBLE, Mep1, Tag12, MPI_COMM_WORLD);
+    //MPI_Send(&U[N-4*(Nx-1)], 3*(Nx-1), MPI_DOUBLE, Mep1, Tag12, MPI_COMM_WORLD);
     MPI_Recv(&U_Mem1[0], 3*(Nx-1), MPI_DOUBLE, Mem1, Tag12, MPI_COMM_WORLD, &status);
     MPI_Send(&U[(r-2)*(Nx-1)], 3*(Nx-1), MPI_DOUBLE, Mem1, Tag11, MPI_COMM_WORLD);
+    //MPI_Send(&U[(Nx-1)], 3*(Nx-1), MPI_DOUBLE, Mem1, Tag11, MPI_COMM_WORLD);
     MPI_Recv(&U_Mep1[0], 3*(Nx-1), MPI_DOUBLE, Mep1, Tag11, MPI_COMM_WORLD, &status);
+
+    //print("OK1");
 
     for(int j = jBeg+1; j <= jEnd+1; ++j){
         for(int i = 1; i < Nx; ++i){
@@ -210,15 +218,15 @@ std::vector<double> Laplacian::ExactSol(const double t){
 
     if (Me == 0){
         jBeg = iBeg;
-        jEnd = iEnd + r-1;
+        jEnd = iEnd + r/2 + r%2;
     }
     else if (Me == Np-1){
-        jBeg = iBeg - r+1;
+        jBeg = iBeg - r/2;
         jEnd = iEnd;
     }
     else{
-        jBeg = iBeg - r+1;
-        jEnd = iEnd + r-1;
+        jBeg = iBeg - r/2;
+        jEnd = iEnd + r/2 + r%2;
     }
 
     for (int j = jBeg+1; j <= jEnd+1; ++j){

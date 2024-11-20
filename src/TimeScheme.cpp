@@ -14,21 +14,21 @@ void TimeScheme::SaveSol(const std::vector<double> &U, std::string n_sol, int n)
     int Np, Me, iBeg, iEnd, jBeg, jEnd, Nx(_df->Get_Nx());
     MPI_Comm_rank(MPI_COMM_WORLD, &Me);
     MPI_Comm_size(MPI_COMM_WORLD, &Np);
-    double r(_df->Get_r());
+    int r(_df->Get_r());
 
     charge(Me, (_df->Get_Ny()-1), Np, &iBeg, &iEnd);
 
     if (Me == 0){
         jBeg = iBeg;
-        jEnd = iEnd + r-1;
+        jEnd = iEnd + r/2 + r%2;
     }
     else if (Me == Np-1){
-        jBeg = iBeg - r+1;
+        jBeg = iBeg - r/2;
         jEnd = iEnd;
     }
     else{
-        jBeg = iBeg - r+1;
-        jEnd = iEnd + r-1;
+        jBeg = iBeg - r/2;
+        jEnd = iEnd + r/2 + r%2;
     }
 
     monflux.open(n_file, std::ios::out);
@@ -191,9 +191,9 @@ void ImplicitScheme::Integrate(double &t, std::vector<double> &U){
     int Np, Me, k(0), kmax(1000);
     MPI_Comm_rank(MPI_COMM_WORLD, &Me);
     MPI_Comm_size(MPI_COMM_WORLD, &Np);
-    while ((k < kmax)){
-        //U_old = U;
-        //U_Me_old = TruncVector(U_old,_df->Get_Nx());
+    while ((k < kmax)&&(max > 1e-12)){
+        U_old = U;
+        U_Me_old = TruncVector(U_old,_df->Get_Nx());
         if (_df->Get_Solver() == "Jacobi"){
             U = Jacobi(U, _lap->RHS(t,U));
         } 
@@ -207,18 +207,18 @@ void ImplicitScheme::Integrate(double &t, std::vector<double> &U){
             printf("Pas de solveur\n");
             std::exit(0);
         }
-        // U_Me = TruncVector(U,_df->Get_Nx());
-        // U_diff = AbsVector(SubVector(U_Me,U_Me_old));
-        // max_loc = *std::max_element(U_diff.begin(), U_diff.end());
-        // MPI_Allreduce(&max_loc, &max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+        U_Me = TruncVector(U,_df->Get_Nx());
+        U_diff = AbsVector(SubVector(U_Me,U_Me_old));
+        max_loc = *std::max_element(U_diff.begin(), U_diff.end());
+        MPI_Allreduce(&max_loc, &max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
         ++k;
-        printf("k=%d",k);
+        //printf("k=%d\n",k);
     }
 
-    // if (k >= kmax){
-    //     printf("Pas de convergence (Schwarz)\n");
-    //     std::exit(0);
-    // }
+    if (k >= kmax){
+        printf("Pas de convergence (Schwarz)\n");
+        std::exit(0);
+    }
 }
 
 #define _TIME_SCHEME_CPP

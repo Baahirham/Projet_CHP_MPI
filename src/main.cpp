@@ -29,9 +29,11 @@ int main(int argc, char** argv)
       int it(0);
       ts->SaveSol(U,"sol_" + std::to_string(Me),it);
       double t(0.0);
+      printf("reste=%d, quotient=%d\n",3%2,3/2);
 
       while (t < df->Get_Tf()){
          ts->Integrate(t, U);
+         //printf("OK\n");
          ++it;
          ts->SaveSol(U,"sol_" + std::to_string(Me),it);
       }
