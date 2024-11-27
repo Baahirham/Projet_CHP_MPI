@@ -32,36 +32,35 @@ int main(int argc, char** argv)
 
       while (t < df->Get_Tf()){
          ts->Integrate(t, U);
+         //printf("OK\n");
          ++it;
          ts->SaveSol(U,"sol_" + std::to_string(Me),it);
       }
 
       t2 = MPI_Wtime();
 
-      printf("Me = %d, temps = %lf\n", Me, t2-t1);
-
       // ------------------- Pour valider l'ordre du schéma ----------------
 
-      // if (df->Get_cas() != 3){
+      if (df->Get_cas() != 3){
 
-      //    double Erreur(0.0), Normalise(0.0), ErreurNorm(0.0);
-      //    std::vector<double> ExacteSol(U.size());
+         double Erreur(0.0), Normalise(0.0), ErreurNorm(0.0);
+         std::vector<double> ExacteSol(U.size());
 
-      //    ExacteSol = lap->ExactSol(t);
+         ExacteSol = lap->ExactSol(t);
 
-      //    for(int k = 0; k < (U.size()); ++k){
-      //    Erreur += (U[k] - ExacteSol[k])*(U[k] - ExacteSol[k]);
-      //    Normalise += ExacteSol[k]*ExacteSol[k];
-      //    }
+         for(int k = 0; k < (U.size()); ++k){
+         Erreur += (U[k] - ExacteSol[k])*(U[k] - ExacteSol[k]);
+         Normalise += ExacteSol[k]*ExacteSol[k];
+         }
 
-      //    ErreurNorm = sqrt(Erreur/Normalise);
+         ErreurNorm = sqrt(Erreur/Normalise);
 
-      //    printf("Me = %d, temps = %lf, ln(dx) = %lf, ln(Erreur) = %lf\n", Me, t2-t1, log(df->Get_dx()), log(ErreurNorm));
+         printf("Me = %d, temps = %lf, ln(dx) = %lf, ln(Erreur) = %lf\n", Me, t2-t1, log(df->Get_dx()), log(ErreurNorm));
 
-      // }
-      // else{
-      //    printf("Pas de solution exacte\n");
-      // }
+      }
+      else{
+         printf("Pas de solution exacte\n");
+      }
 
       // ----------------------------------------------------------------------
 

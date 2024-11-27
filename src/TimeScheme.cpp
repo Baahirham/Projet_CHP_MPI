@@ -14,21 +14,21 @@ void TimeScheme::SaveSol(const std::vector<double> &U, std::string n_sol, int n)
     int Np, Me, iBeg, iEnd, jBeg, jEnd, Nx(_df->Get_Nx());
     MPI_Comm_rank(MPI_COMM_WORLD, &Me);
     MPI_Comm_size(MPI_COMM_WORLD, &Np);
-    double r(_df->Get_r());
+    int r(_df->Get_r());
 
     charge(Me, (_df->Get_Ny()-1), Np, &iBeg, &iEnd);
 
     if (Me == 0){
         jBeg = iBeg;
-        jEnd = iEnd + r-1;
+        jEnd = iEnd + r/2 + r%2;
     }
     else if (Me == Np-1){
-        jBeg = iBeg - r+1;
+        jBeg = iBeg - r/2;
         jEnd = iEnd;
     }
     else{
-        jBeg = iBeg - r+1;
-        jEnd = iEnd + r-1;
+        jBeg = iBeg - r/2;
+        jEnd = iEnd + r/2 + r%2;
     }
 
     monflux.open(n_file, std::ios::out);
@@ -77,7 +77,7 @@ std::vector<double> ImplicitScheme::Jacobi(const std::vector<double> &U, const s
     double a(1.0 + 2.0*dt*D*(1.0/(dx*dx) + 1.0/(dy*dy)));
     int Nmax(10000), it(0);
     x = U;
-    r = SubVector(AddVector(U,MultiplyBy(F,dt)),_lap->MatVecProd(x));
+    r = SubVector(F,_lap->MatVecProd(x));
     while ((it < Nmax) && (std::sqrt(DotProduct(r,r))/std::sqrt(DotProduct(AddVector(U,MultiplyBy(F,dt)),AddVector(U,MultiplyBy(F,dt)))) > 1e-12)){
         x = AddVector(x,MultiplyBy(r,(1.0/a)));
         r = SubVector(AddVector(U,MultiplyBy(F,dt)),_lap->MatVecProd(x));
@@ -98,7 +98,7 @@ std::vector<double> ImplicitScheme::CG(const std::vector<double> &U, const std::
     int Nmax(10000), k(0);
     double dt(_df->Get_dt());
     x = U;
-    r = SubVector(AddVector(U,MultiplyBy(F,dt)),_lap->MatVecProd(x));
+    r = SubVector(F,_lap->MatVecProd(x));
     while ((k < Nmax) && (std::sqrt(DotProduct(r,r))/std::sqrt(DotProduct(AddVector(U,MultiplyBy(F,dt)),AddVector(U,MultiplyBy(F,dt)))) > 1e-12)){
         z = r;
         rho = DotProduct(r,z);
@@ -146,7 +146,7 @@ std::vector<double> ImplicitScheme::BiCGstab(std::vector<double> &U, const std::
     MPI_Comm_size(MPI_COMM_WORLD, &Np);
 
     x = U;
-    r = SubVector(AddVector(U,MultiplyBy(F,dt)),_lap->MatVecProd(x));
+    r = SubVector(F,_lap->MatVecProd(x));
     r_tilde = r;
     rho = DotProduct(r_tilde,r);
     p = r;
@@ -188,10 +188,10 @@ void ImplicitScheme::Integrate(double &t, std::vector<double> &U){
     std::vector<double> U_old, U_diff, U_Me, U_Me_old;
     double max(1e12), max_loc(1e12);
     int Nx(_df->Get_Nx());
-    int Np, Me, k(0), kmax(10000);
+    int Np, Me, k(0), kmax(1000);
     MPI_Comm_rank(MPI_COMM_WORLD, &Me);
     MPI_Comm_size(MPI_COMM_WORLD, &Np);
-    while ((k < kmax) && (max > 1e-12)){
+    while ((k < kmax)&&(max > 1e-12)){
         U_old = U;
         U_Me_old = TruncVector(U_old,_df->Get_Nx());
         if (_df->Get_Solver() == "Jacobi"){

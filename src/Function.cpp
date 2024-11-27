@@ -39,7 +39,7 @@ double Function::Exact_solution(const double x, const double y, const double t) 
    {
       double pi(std::acos(-1.0));
       double xmax(_df->Get_xmax()), ymax(_df->Get_ymax()), xmin(_df->Get_xmin()), ymin(_df->Get_ymin()); 
-      return t*sin(2.0*pi*x/(_df->Get_xmax()-_df->Get_xmin()))*sin(2.0*pi*y/(_df->Get_ymax()-_df->Get_ymin()));
+      return sin(t)*sin(2.0*pi*x/(_df->Get_xmax()-_df->Get_xmin()))*sin(2.0*pi*y/(_df->Get_ymax()-_df->Get_ymin()));
    }
    else if (this->_df->Get_cas() == 1)
    {
@@ -67,7 +67,7 @@ double Function::Source(const double x, const double y, const double t) const
    if (_df->Get_cas() == 0)
    {
       double xmax(_df->Get_xmax()), ymax(_df->Get_ymax()), xmin(_df->Get_xmin()), ymin(_df->Get_ymin()); 
-      return sin(2.0*pi*x/(_df->Get_xmax()-_df->Get_xmin()))*sin(2.0*pi*y/(_df->Get_ymax()-_df->Get_ymin()))*(1.0 + t*_df->Get_D()*4.0*pi*pi*(1.0/((xmax - xmin)*(xmax - xmin)) + 1.0/((ymax - ymin)*(ymax - ymin))));
+      return sin(2.0*pi*x/(_df->Get_xmax()-_df->Get_xmin()))*sin(2.0*pi*y/(_df->Get_ymax()-_df->Get_ymin()))*(cos(t) + sin(t)*_df->Get_D()*4.0*pi*pi*(1.0/((xmax - xmin)*(xmax - xmin)) + 1.0/((ymax - ymin)*(ymax - ymin))));
    }
    else if (this->_df->Get_cas() == 1)
    {
