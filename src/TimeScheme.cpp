@@ -77,7 +77,7 @@ std::vector<double> ImplicitScheme::Jacobi(const std::vector<double> &U, const s
     double a(1.0 + 2.0*dt*D*(1.0/(dx*dx) + 1.0/(dy*dy)));
     int Nmax(10000), it(0);
     x = U;
-    r = SubVector(AddVector(U,MultiplyBy(F,dt)),_lap->MatVecProd(x));
+    r = SubVector(F,_lap->MatVecProd(x));
     while ((it < Nmax) && (std::sqrt(DotProduct(r,r))/std::sqrt(DotProduct(AddVector(U,MultiplyBy(F,dt)),AddVector(U,MultiplyBy(F,dt)))) > 1e-12)){
         x = AddVector(x,MultiplyBy(r,(1.0/a)));
         r = SubVector(AddVector(U,MultiplyBy(F,dt)),_lap->MatVecProd(x));
@@ -98,7 +98,7 @@ std::vector<double> ImplicitScheme::CG(const std::vector<double> &U, const std::
     int Nmax(10000), k(0);
     double dt(_df->Get_dt());
     x = U;
-    r = SubVector(AddVector(U,MultiplyBy(F,dt)),_lap->MatVecProd(x));
+    r = SubVector(F,_lap->MatVecProd(x));
     while ((k < Nmax) && (std::sqrt(DotProduct(r,r))/std::sqrt(DotProduct(AddVector(U,MultiplyBy(F,dt)),AddVector(U,MultiplyBy(F,dt)))) > 1e-12)){
         z = r;
         rho = DotProduct(r,z);
@@ -146,7 +146,7 @@ std::vector<double> ImplicitScheme::BiCGstab(std::vector<double> &U, const std::
     MPI_Comm_size(MPI_COMM_WORLD, &Np);
 
     x = U;
-    r = SubVector(AddVector(U,MultiplyBy(F,dt)),_lap->MatVecProd(x));
+    r = SubVector(F,_lap->MatVecProd(x));
     r_tilde = r;
     rho = DotProduct(r_tilde,r);
     p = r;

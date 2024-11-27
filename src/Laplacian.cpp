@@ -65,14 +65,26 @@ std::vector<double> Laplacian::MatVecProd(const std::vector<double> &U){
     if ((Me != 0) && (Me != Np-1)){
         for(int k = 0; k < N; ++k){
             if ((Nx-2 < k) && (k < N-Nx+1)) {
+        
                 a = 1.0 + 2.0*dt*D*(1.0/(dx*dx) + 1.0/(dy*dy));
                 b = -D*dt/(dx*dx);
                 c = -D*dt/(dy*dy);
+                
             }
             else{
-                a = 1.0 + 2.0*dt*D*(1.0/(dx*dx) + 1.0/(dy*dy)) + d;
-                b = -D*dt/(dx*dx);
-                c = -2.0*D*dt/(dy*dy);
+                if(alpha==0)
+                {
+                    a = 1.0/(dx*dx) + 1.0/(dy*dy);
+                    b = 0;
+                    c = 0;
+                }
+                else
+                {
+                    a = 1.0 + 2.0*dt*D*(1.0/(dx*dx) + 1.0/(dy*dy)) + d;
+                    b = -D*dt/(dx*dx);
+                    c = -2.0*D*dt/(dy*dy);
+                }
+                
             }
             i = k%(Nx-1);
             j = k/(Nx-1);
@@ -91,9 +103,18 @@ std::vector<double> Laplacian::MatVecProd(const std::vector<double> &U){
                 c = -D*dt/(dy*dy);
             }
             else{
-                a = 1.0 + 2.0*dt*D*(1.0/(dx*dx) + 1.0/(dy*dy)) + d;
-                b = -D*dt/(dx*dx);
-                c = -2.0*D*dt/(dy*dy);
+                if(alpha==0)
+                {
+                    a = 1.0/(dx*dx) + 1.0/(dy*dy);
+                    b = 0;
+                    c = 0;
+                }
+                else
+                {
+                    a = 1.0 + 2.0*dt*D*(1.0/(dx*dx) + 1.0/(dy*dy)) + d;
+                    b = -D*dt/(dx*dx);
+                    c = -2.0*D*dt/(dy*dy);
+                }
             }
             i = k%(Nx-1);
             j = k/(Nx-1);
@@ -112,9 +133,18 @@ std::vector<double> Laplacian::MatVecProd(const std::vector<double> &U){
                 c = -D*dt/(dy*dy);
             }
             else{
-                a = 1.0 + 2.0*dt*D*(1.0/(dx*dx) + 1.0/(dy*dy)) + d;
-                b = -D*dt/(dx*dx);
-                c = -2.0*D*dt/(dy*dy);
+                if(alpha==0)
+                {
+                    a = 1.0/(dx*dx) + 1.0/(dy*dy);
+                    b = 0;
+                    c = 0;
+                }
+                else
+                {
+                    a = 1.0 + 2.0*dt*D*(1.0/(dx*dx) + 1.0/(dy*dy)) + d;
+                    b = -D*dt/(dx*dx);
+                    c = -2.0*D*dt/(dy*dy);
+                }
             }
             i = k%(Nx-1);
             j = k/(Nx-1);
@@ -133,15 +163,27 @@ std::vector<double> Laplacian::RHS(const double t, const std::vector<double> &U)
     const int Nx(_df->Get_Nx()), Ny(_df->Get_Ny());
     std::vector<double> rhs(U.size());
     int k(0);
-    double dx(_df->Get_dx()), dy(_df->Get_dy()), alpha(_df->Get_alpha()), beta(_df->Get_beta());
+    double dx(_df->Get_dx()), dy(_df->Get_dy()), alpha(_df->Get_alpha()), beta(_df->Get_beta()), dt(_df->Get_dt()), D(_df->Get_D());
     double x_i, xmin(_df->Get_xmin());
     double y_j, ymin(_df->Get_ymin());
-    int Np, Me, r(_df->Get_r()), N(U.size()), iBeg, jBeg, iEnd, jEnd;
+    int Np, Me, r(_df->Get_r()), N(U.size()), iBeg, jBeg, iEnd, jEnd,r1,r2;
     MPI_Status status;
     MPI_Comm_rank(MPI_COMM_WORLD, &Me);
     MPI_Comm_size(MPI_COMM_WORLD, &Np);
-    int Tag11(11), Tag12(12), Mep1, Mem1;
-    std::vector<double> U_Mem1(3*(Nx-1),0.0), U_Mep1(3*(Nx-1),0.0), U_Mem1_send(Nx-1,0.0), U_Mep1_send(Nx-1,0.0), U_Mem1_recv(Nx-1,0.0), U_Mep1_recv(Nx-1,0.0);
+    int Tag11(11), Tag12(12), Mep1, Mem1,tmessage;
+    if(alpha==0)
+    {
+        tmessage = 1;
+        r1 = r-1;
+        r2 = r+1;
+    }
+    else
+    {
+        tmessage = 3;
+        r1 = r;
+        r2 = r;
+    }
+    std::vector<double> U_Mem1(tmessage*(Nx-1),0.0), U_Mep1(tmessage*(Nx-1),0.0);
 
     charge(Me, (_df->Get_Ny()-1), Np, &iBeg, &iEnd);
 
@@ -165,41 +207,46 @@ std::vector<double> Laplacian::RHS(const double t, const std::vector<double> &U)
         Mem1 = Me-1;
     }
 
-    // printf("Me=%d, ibeg=%d, iend=%d\n",Me,iBeg,iEnd);
-    // printf("Me=%d, jbeg=%d, jend=%d\n",Me,jBeg,jEnd);
 
-    // printf("N=%d\n",N);
-    // printf("debut Mem1=%d\n",N-(r+1)*(Nx-1));
-    // printf("taille=%d\n",3*(Nx-1));
-    // printf("debut Mep1=%d\n",(r-2)*(Nx-1));
-
-    MPI_Send(&U[N-(r+1)*(Nx-1)], 3*(Nx-1), MPI_DOUBLE, Mep1, Tag12, MPI_COMM_WORLD);
-    //MPI_Send(&U[N-4*(Nx-1)], 3*(Nx-1), MPI_DOUBLE, Mep1, Tag12, MPI_COMM_WORLD);
-    MPI_Recv(&U_Mem1[0], 3*(Nx-1), MPI_DOUBLE, Mem1, Tag12, MPI_COMM_WORLD, &status);
-    MPI_Send(&U[(r-2)*(Nx-1)], 3*(Nx-1), MPI_DOUBLE, Mem1, Tag11, MPI_COMM_WORLD);
-    //MPI_Send(&U[(Nx-1)], 3*(Nx-1), MPI_DOUBLE, Mem1, Tag11, MPI_COMM_WORLD);
-    MPI_Recv(&U_Mep1[0], 3*(Nx-1), MPI_DOUBLE, Mep1, Tag11, MPI_COMM_WORLD, &status);
-
-    //print("OK1");
+    MPI_Send(&U[N-(r1+1)*(Nx-1)], tmessage*(Nx-1), MPI_DOUBLE, Mep1, Tag12, MPI_COMM_WORLD);
+    MPI_Recv(&U_Mem1[0], tmessage*(Nx-1), MPI_DOUBLE, Mem1, Tag12, MPI_COMM_WORLD, &status);
+    MPI_Send(&U[(r2-2)*(Nx-1)], tmessage*(Nx-1), MPI_DOUBLE, Mem1, Tag11, MPI_COMM_WORLD);
+    MPI_Recv(&U_Mep1[0], tmessage*(Nx-1), MPI_DOUBLE, Mep1, Tag11, MPI_COMM_WORLD, &status);
 
     for(int j = jBeg+1; j <= jEnd+1; ++j){
         for(int i = 1; i < Nx; ++i){
             x_i = xmin + i*dx;
             y_j = ymin + j*dy;
-            rhs[k] = _fct->Source(x_i,y_j,t); 
+            rhs[k] = U[k] + dt*_fct->Source(x_i,y_j,t); 
             if(i == 1){
-                rhs[k] += _df->Get_D()*_fct->Dirichlet_Gamma_1(x_i - dx,y_j,t)/(dx*dx);
+                rhs[k] += dt*D*_fct->Dirichlet_Gamma_1(x_i - dx,y_j,t)/(dx*dx);
             }        
             if(i == Nx-1){
-                rhs[k] += _df->Get_D()*_fct->Dirichlet_Gamma_1(x_i + dx,y_j,t)/(dx*dx);
+                rhs[k] += dt*D*_fct->Dirichlet_Gamma_1(x_i + dx,y_j,t)/(dx*dx);
             } 
             if(j == jBeg+1){
-                rhs[k] += (_df->Get_D()/(dy*dy))*(U_Mem1[i-1] - U_Mem1[i-1 + 2*(Nx-1)] + (2*beta*dy/alpha)*U_Mem1[i-1 + Nx-1]);
-                if (Me == 0) rhs[k] += _df->Get_D()*_fct->Dirichlet_Gamma_0(x_i,y_j - dy,t)/(dy*dy);
+                if(alpha==0)
+                {
+                    rhs[k] = U_Mem1[i-1]*(1.0/(dx*dx) + 1.0/(dy*dy));
+                    if (Me == 0) rhs[k] += dt*D*_fct->Dirichlet_Gamma_0(x_i,y_j - dy,t)/(dy*dy);
+                }
+                else
+                {
+                    rhs[k] += dt*(D/(dy*dy))*(U_Mem1[i-1] - U_Mem1[i-1 + 2*(Nx-1)] + (2*beta*dy/alpha)*U_Mem1[i-1 + Nx-1]);
+                    if (Me == 0) rhs[k] += dt*D*_fct->Dirichlet_Gamma_0(x_i,y_j - dy,t)/(dy*dy);
+                }
             } 
             if(j == jEnd+1){
-                rhs[k] += (_df->Get_D()/(dy*dy))*(U_Mep1[i-1 + 2*(Nx-1)] - U_Mep1[i-1] + (2*beta*dy/alpha)*U_Mep1[i-1 + Nx-1]);
-                if (Me == Np-1) rhs[k] += _df->Get_D()*_fct->Dirichlet_Gamma_0(x_i,y_j + dy,t)/(dy*dy);
+                if(alpha==0)
+                {
+                    rhs[k] = U_Mep1[i-1]*(1.0/(dx*dx) + 1.0/(dy*dy));
+                    if (Me == Np-1) rhs[k] += dt*D*_fct->Dirichlet_Gamma_0(x_i,y_j + dy,t)/(dy*dy);
+                }
+                else
+                {
+                    rhs[k] += dt*(D/(dy*dy))*(U_Mep1[i-1 + 2*(Nx-1)] - U_Mep1[i-1] + (2*beta*dy/alpha)*U_Mep1[i-1 + Nx-1]);
+                    if (Me == Np-1) rhs[k] += dt*D*_fct->Dirichlet_Gamma_0(x_i,y_j + dy,t)/(dy*dy);
+                }
             } 
             ++k;
         }
