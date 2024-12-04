@@ -36,7 +36,6 @@ void Laplacian::InitialCondition(std::vector<double> &U){
         jEnd = iEnd + r/2 + r%2;
     }
 
-
     for (int j = jBeg+1; j <= jEnd+1; ++j){
         for (int i = 1; i<_df->Get_Nx(); ++i){
             U[k] = _fct->Initial_condition(_df->Get_xmin() + i*_df->Get_dx(),_df->Get_ymin() + j*_df->Get_dy());
@@ -63,27 +62,23 @@ std::vector<double> Laplacian::MatVecProd(const std::vector<double> &U){
     
     if ((Me != 0) && (Me != Np-1)){
         for(int k = 0; k < N; ++k){
-            if ((Nx-2 < k) && (k < N-Nx+1)) {
-        
+            if ((Nx-2 < k) && (k < N-Nx+1)){
                 a = 1.0 + 2.0*dt*D*(1.0/(dx*dx) + 1.0/(dy*dy));
                 b = -D*dt/(dx*dx);
                 c = -D*dt/(dy*dy);
                 
             }
             else{
-                if(alpha == 0.0)
-                {
+                if(alpha == 0.0){
                     a = 1.0/(dx*dx) + 1.0/(dy*dy);
                     b = 0;
                     c = 0;
                 }
-                else
-                {
+                else{
                     a = 1.0 + 2.0*dt*D*(1.0/(dx*dx) + 1.0/(dy*dy)) + d;
                     b = -D*dt/(dx*dx);
                     c = -2.0*D*dt/(dy*dy);
                 }
-                
             }
             i = k%(Nx-1);
             j = k/(Nx-1);
@@ -96,20 +91,18 @@ std::vector<double> Laplacian::MatVecProd(const std::vector<double> &U){
     }
     if ((Me == 0)){
         for(int k = 0; k < N; ++k){
-            if (k < N-Nx+1) {
+            if (k < N-Nx+1){
                 a = 1.0 + 2.0*dt*D*(1.0/(dx*dx) + 1.0/(dy*dy));
                 b = -D*dt/(dx*dx);
                 c = -D*dt/(dy*dy);
             }
             else{
-                if(alpha == 0.0)
-                {
+                if(alpha == 0.0){
                     a = 1.0/(dx*dx) + 1.0/(dy*dy);
                     b = 0;
                     c = 0;
                 }
-                else
-                {
+                else{
                     a = 1.0 + 2.0*dt*D*(1.0/(dx*dx) + 1.0/(dy*dy)) + d;
                     b = -D*dt/(dx*dx);
                     c = -2.0*D*dt/(dy*dy);
@@ -126,20 +119,18 @@ std::vector<double> Laplacian::MatVecProd(const std::vector<double> &U){
     }
     if (Me == Np-1){
         for(int k = 0; k < N; ++k){
-            if (Nx-2 < k) {
+            if (Nx-2 < k){
                 a = 1.0 + 2.0*dt*D*(1.0/(dx*dx) + 1.0/(dy*dy));
                 b = -D*dt/(dx*dx);
                 c = -D*dt/(dy*dy);
             }
             else{
-                if(alpha == 0.0)
-                {
+                if(alpha == 0.0){
                     a = 1.0/(dx*dx) + 1.0/(dy*dy);
                     b = 0;
                     c = 0;
                 }
-                else
-                {
+                else{
                     a = 1.0 + 2.0*dt*D*(1.0/(dx*dx) + 1.0/(dy*dy)) + d;
                     b = -D*dt/(dx*dx);
                     c = -2.0*D*dt/(dy*dy);
@@ -154,7 +145,6 @@ std::vector<double> Laplacian::MatVecProd(const std::vector<double> &U){
             if (j < (iEnd-iBeg + r/2)) X[k] += c * U[k + Nx-1];
         }
     }
-
     return X;
 }
 
@@ -171,14 +161,12 @@ std::vector<double> Laplacian::RHS(const double t, const std::vector<double> &U)
     MPI_Comm_size(MPI_COMM_WORLD, &Np);
     int Tag11(11), Tag12(12), Mep1, Mem1,tmessage;
 
-    if (alpha == 0)
-    {
+    if (alpha == 0){
         tmessage = 1;
         r1 = r-1;
         r2 = r+1;
     }
-    else
-    {
+    else{
         tmessage = 3;
         r1 = r;
         r2 = r;
@@ -193,8 +181,7 @@ std::vector<double> Laplacian::RHS(const double t, const std::vector<double> &U)
         Mep1 = Me+1;
         Mem1 = MPI_PROC_NULL;
     }
-    if (Me == Np-1)
-    {
+    if (Me == Np-1){
         jBeg = iBeg - r/2;
         jEnd = iEnd;
         Mep1 = MPI_PROC_NULL;
@@ -224,25 +211,21 @@ std::vector<double> Laplacian::RHS(const double t, const std::vector<double> &U)
                 rhs[k] += dt*D*_fct->Dirichlet_Gamma_1(x_i + dx,y_j,t)/(dx*dx);
             } 
             if(j == jBeg+1){
-                if(alpha == 0)
-                {
+                if(alpha == 0){
                     if (Me == 0) rhs[k] += dt*D*_fct->Dirichlet_Gamma_0(x_i,y_j - dy,t)/(dy*dy);
                     else rhs[k] = U_Mem1[i-1]*(1.0/(dx*dx) + 1.0/(dy*dy));
                 }
-                else
-                {
+                else{
                     if (Me == 0) rhs[k] += dt*D*_fct->Dirichlet_Gamma_0(x_i,y_j - dy,t)/(dy*dy);
                     else rhs[k] += dt*(D/(dy*dy))*(U_Mem1[i-1] - U_Mem1[i-1 + 2*(Nx-1)] + (2*beta*dy/alpha)*U_Mem1[i-1 + Nx-1]);
                 }
             } 
             if(j == jEnd+1){
-                if(alpha == 0)
-                {
+                if(alpha == 0){
                     if (Me == Np-1) rhs[k] += dt*D*_fct->Dirichlet_Gamma_0(x_i,y_j + dy,t)/(dy*dy);
                     else rhs[k] = U_Mep1[i-1]*(1.0/(dx*dx) + 1.0/(dy*dy));
                 }
-                else
-                {
+                else{
                     if (Me == Np-1) rhs[k] += dt*D*_fct->Dirichlet_Gamma_0(x_i,y_j + dy,t)/(dy*dy);
                     else rhs[k] += dt*(D/(dy*dy))*(U_Mep1[i-1 + 2*(Nx-1)] - U_Mep1[i-1] + (2*beta*dy/alpha)*U_Mep1[i-1 + Nx-1]);
                 }
