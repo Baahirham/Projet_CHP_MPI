@@ -1,4 +1,4 @@
-# Résolution d'un équation de diffusion à par décompostion de Schwarz additive
+# Résolution d'une équation de diffusion à par décompostion de Schwarz additive
 
 ## Prérequis
 - [MPI](https://www.open-mpi.org/) installé sur votre système
