@@ -12,9 +12,19 @@
    - Créez un fichier `data.toml` dans le dossier `data/` avec les paramètres suivants :  
      ```toml
      cas = 1   # Choisir 1, 2 ou 3
+     xmin = 0.0
+     xmax = 1.0
+     ymin = 0.0
+     ymax = 1.0 # Dimensions du domaine
+     D = 1.0   # Coefficient de diffusion
+     Tf = 10.0 # Temps de simulation
+     dt = 0.1  # Pas de temps
      Nx = 100  # Nombre de points en x
      Ny = 100  # Nombre de points en y
+     Solver = "CG" # Choix du solveur "CG", "BiCGstab" ou "Jacobi" (CG ou jacobi si les matrices sont sdp)
      r = 2     # Recouvrement (minimum 2)
+     alpha = 0.0
+     beta = 1.0 # Coefficients des condition aux limites type Fourier-Robin
      ```
 
 2. **Compilation**  
