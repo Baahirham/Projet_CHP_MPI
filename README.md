@@ -48,13 +48,13 @@
 
 ## Structure des dossiers
 
-.
-├── data/       # Contient data.toml
-├── res/        # Fichiers résultats VTK
-└── src/        # Code source
+- `data/` Contient le fichier de paramètres data.toml
+- `res/` Contient les fichiers résultats VTK
+- `src/` Contient le code source
 
 
 ## Notes
 - Ajustez le nombre de processus (`-n 4`) en fonction de votre système.
 - Assurez-vous que le recouvrement `r` ≥ 2 dans `data.toml`.
+- Utilisez le bon solveur en fonction des conditions aux limites utilisées.
 
