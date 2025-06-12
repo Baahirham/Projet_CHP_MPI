@@ -24,6 +24,10 @@ sur $$\Omega = [x_\text{min}, x_\text{min}] \times [y_\text{min}, y_\text{min}]$
 - Compilateur C/C++ compatible (gcc, clang, etc.)
 - Make pour la compilation
 
+![Exemple : cas 1](res/cas1.png)
+
+![Exemple de décomposition](res/domaine.png)
+
 ## Lancer une simulation
 
 1. **Préparation du fichier de configuration**  
