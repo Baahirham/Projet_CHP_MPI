@@ -1,5 +1,19 @@
 # Résolution d'une équation de diffusion par décompostion de Schwarz additive
 
+# Les équations
+
+Ce code permet de résoudre une équation de diffusion par décomposition de domaine de type Schwarz additive. L'équation résolue est du type
+
+$$
+\begin{cases}
+    \partial_t u(x,y,t) - D\Delta u(x,y,t) = f(x,y,t), \\
+    u _{\Gamma_0} = g(x,y,t),\\
+    u|_{\Gamma_1} = h(x,y,t).
+\end{cases}
+$$
+
+sur $$\Omega = [x_\text{min}, x_\text{min}] \times [y_\text{min}, y_\text{min}].
+
 ## Prérequis
 - [MPI](https://www.open-mpi.org/) installé sur votre système
 - [Paraview](https://www.paraview.org/) pour la visualisation des résultats
