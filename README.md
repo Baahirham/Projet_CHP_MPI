@@ -13,7 +13,7 @@ $$
 Conditions aux limites :
 
 $$
-u|\\_{\Gamma_0} = g(x,y,t), \quad
+u|_{Γ_0} = g(x,y,t), \quad
 u|\\_{\Gamma_1} = h(x,y,t).
 $$
 
