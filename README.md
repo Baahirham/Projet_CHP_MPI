@@ -2,7 +2,7 @@
 
 # Les équations
 
-Ce code permet de résoudre une équation de diffusion par décomposition de domaine de type Schwarz additive. L'équation résolue est du type
+Ce code permet de résoudre une équation de diffusion par décomposition de domaine de type Schwarz additif. L'équation résolue est du type :
 
 Équation de diffusion :
 
