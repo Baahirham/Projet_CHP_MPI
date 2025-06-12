@@ -4,12 +4,17 @@
 
 Ce code permet de résoudre une équation de diffusion par décomposition de domaine de type Schwarz additive. L'équation résolue est du type
 
+Équation de diffusion :
+
 $$
-\begin{cases}
-    \partial_t u(x,y,t) - D\Delta u(x,y,t) = f(x,y,t), \\
-    u _{\Gamma_0} = g(x,y,t),\\
-    u|_{\Gamma_1} = h(x,y,t).
-\end{cases}
+\partial_t u(x,y,t) - D \Delta u(x,y,t) = f(x,y,t),
+$$
+
+Conditions aux limites :
+
+$$
+u|_{\Gamma_0} = g(x,y,t), \quad
+u|_{\Gamma_1} = h(x,y,t).
 $$
 
 sur $$\Omega = [x_\text{min}, x_\text{min}] \times [y_\text{min}, y_\text{min}].
