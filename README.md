@@ -1,7 +1,5 @@
 # Résolution d'une équation de diffusion par décompostion de Schwarz additive
 
-# Les équations
-
 Ce code permet de résoudre une équation de diffusion par décomposition de domaine de type Schwarz additif. L'équation résolue est du type :
 
 Équation de diffusion :
