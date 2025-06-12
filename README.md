@@ -18,15 +18,15 @@ $$
 
 sur $$\Omega = [x_\text{min}, x_\text{min}] \times [y_\text{min}, y_\text{min}]$$, avec $$\partial\Omega = \Gamma_0 \cup \Gamma_0$$.
 
+| Exemple : cas 1 | Exemple de décomposition |
+|---------|---------|
+|![Exemple : cas 1](res/cas1.png) | ![Exemple de décomposition](res/omega.png)|
+
 ## Prérequis
 - [MPI](https://www.open-mpi.org/) installé sur votre système
 - [Paraview](https://www.paraview.org/) pour la visualisation des résultats
 - Compilateur C/C++ compatible (gcc, clang, etc.)
 - Make pour la compilation
-
-| Exemple : cas 1 | Exemple de décomposition |
-|---------|---------|
-|![Exemple : cas 1](res/cas1.png) | ![Exemple de décomposition](res/omega.png)|
 
 ## Lancer une simulation
 
