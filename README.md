@@ -14,7 +14,7 @@ $$
 u \mid_{\Gamma_0}= g(x,y,t), \quad u \mid_{\Gamma_1} = h(x,y,t).
 $$
 
-sur $$\Omega = [x_\text{min}, x_\text{min}] \times [y_\text{min}, y_\text{min}]$$, avec $$\partial\Omega = \Gamma_0 \cup \Gamma_0$$.
+sur $$\Omega = [x_\text{min}, x_\text{max}] \times [y_\text{min}, y_\text{max}]$$, avec $$\partial\Omega = \Gamma_0 \cup \Gamma_0$$.
 
 | Exemple : cas 1 | Exemple de décomposition |
 |---------|---------|
